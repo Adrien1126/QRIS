@@ -1,155 +1,239 @@
 # QRIS — Quantitative Risk & Pricing Engine
 
-QRIS est un moteur quantitatif modulaire conçu pour le pricing d’options,
-le calcul de risque et l’analyse financière.  
-Le projet a pour objectif de reproduire l’architecture d’un système utilisé
-dans les salles de marché (quant, risk IT, trading) en combinant :
+QRIS est un moteur quantitatif modulaire conçu pour le **pricing d’options**, le **calcul des sensibilités**, et la **gestion du risque**.
+Le projet reproduit l’architecture des systèmes utilisés en salles de marché (quant, risk IT, trading) en combinant :
 
-- un cœur haute performance en **C++**
-- une couche de recherche et de prototypage en **Python**
-- une API moderne en **.NET**
-- une intégration utilisateur via **Excel**
-- une gestion des données via **SQL**
+* un moteur haute performance en **C++**
+* une couche de recherche et de prototypage en **Python**
+* une API moderne et industrialisable en **.NET**
+* une interface utilisateur simple via **Excel**
+* une gestion rigoureuse des données de marché via **SQL**
+* une documentation complète et professionnelle
 
-L’objectif principal est éducatif et professionnel : développer des compétences
-solides en finance quantitative, architecture logicielle et ingénierie de
-systèmes, tout en construisant un portfolio crédible.
+QRIS a un double objectif :
+**apprentissage avancé** en finance quantitative & **portfolio technique** démontrant des compétences full-stack quant.
 
 ---
 
-## Overview
+# 🔍 Vision d’Ensemble
 
-QRIS (Quantitative Risk & Pricing Engine) est une plateforme destinée à :
+QRIS est conçu comme une plateforme modulaire permettant :
 
-- implémenter des modèles de pricing (Black-Scholes, Heston, Monte Carlo…)
-- structurer un moteur quant robuste et extensible
-- comprendre la séparation entre instruments, modèles, pricers et data
-- exposer des services de pricing via une API professionnelle
-- offrir un accès utilisateur simple via Excel et une application web
-- approfondir la documentation et la théorie mathématique associée
+* l’implémentation de modèles de pricing (Black-Scholes, Heston, Monte Carlo…)
+* la structuration d’un moteur quant robuste et extensible
+* la séparation stricte entre instruments, modèles, pricers et market data
+* l’exposition du moteur via une API professionnelle
+* la consommation depuis Excel ou une webapp
+* l’expérimentation, la recherche et la calibration via Python
 
-Le projet est pensé comme un **lab d’apprentissage personnel**, mais structuré
-suivant les standards des institutions financières.
+Il s’agit d’un **laboratoire personnel**, mais construit selon les standards des institutions financières.
 
 ---
 
-## Architecture du Projet
+# 🏛️ Architecture Globale
 
-QRIS repose sur une architecture en couches :
+Le système est organisé en couches indépendantes :
 
 ```
-C++ Core       → Pricing haute performance
-Python         → Recherche, prototypage, ML
-.NET API       → Distribution, orchestration, services
-Excel Add-in   → Interface utilisateur pour traders/analystes
-SQL            → Market Data, stockage et persistance
-Documentation  → Architecture + théorie + organisation projet
+src/core (C++)     → Moteur quantitatif haute performance
+src/python         → Recherche, prototypage, validation
+src/api (.NET)     → API REST, orchestration, services
+src/excel          → Add-in Excel (Excel-DNA)
+src/sql            → Market data & schéma SQL
+docs/              → Documentation complète
 ```
 
-Chaque module est indépendant, modulaire et testable.
+Chaque couche peut évoluer indépendamment.
 
 ---
 
-## 🧩 Fonctionnalités
-
-### Fonctionnalités actuelles
-- Structure complète du projet
-- Documentation architecture
-- Design du module Black-Scholes (en cours)
-
-### Fonctionnalités prévues (Roadmap)
-- Pricing Black-Scholes complet (C++)
-- Calcul des Greeks
-- Inversion de volatilité implicite
-- API .NET : endpoint `/pricing/bs`
-- Add-in Excel : `QRIS.BS()`
-- Module Monte Carlo
-- Modèle Heston
-- Courbes et surfaces de volatilité
-- Market Data provider
-- Web dashboard (optionnel)
-- Modèles ML (optionnel)
-
-Le projet est volontairement **itératif** : chaque module est construit pour
-être étendu sans casser la structure.
-
----
-
-## Structure du Repository
+# 🧩 Structure du Repository
 
 ```
 QRIS/
 │
-├── docs/               # Documentation technique, architecture, théorie
-│   ├── architecture/   # Design des modules et flux
-│   ├── research/       # Notes mathématiques et financières
-│   └── project/        # Organisation, scope, milestones
+├── src/
+│   ├── core/                     # MOTEUR QUANTITATIF C++
+│   │   ├── instruments/          # Définition des produits (ex: EuropeanOption)
+│   │   ├── models/               # Modèles (Black-Scholes, Heston…)
+│   │   ├── pricing/              # Méthodes de pricing
+│   │   │   ├── black_scholes/    # Module BS (closed-form, Greeks, IV)
+│   │   │   ├── heston/           # Placeholder extensible
+│   │   │   └── monte_carlo/      # Placeholder extensible
+│   │   ├── utils/                # Math utils, normal law, RNG, etc.
+│   │   └── tests/                # Tests unitaires C++
+│   │
+│   ├── api/                      # API .NET
+│   ├── excel/                    # Add-in Excel (Excel-DNA)
+│   ├── python/                   # Notebooks et recherche
+│   └── sql/                      # Market data – schéma + seeds
 │
-├── cpp/                # Moteur quant haute performance
-├── api/                # API .NET pour exposer les services
-├── excel_addin/        # Intégration Excel via Excel-DNA
-├── sql/                # Schémas et seeds Market Data
+├── docs/                         # Documentation complète
+│   ├── overview/
+│   ├── core/
+│   │   ├── instruments.md
+│   │   ├── models.md
+│   │   ├── pricing.md
+│   │   └── black_scholes/
+│   │       ├── design.md
+│   │       └── theory.md
+│   ├── api/
+│   ├── excel/
+│   ├── data/
+│   ├── roadmap/
+│   └── learning/
+│
+├── samples/                      # Exemples (notebooks, Excel, API)
 └── README.md
 ```
 
-La documentation est un élément central du projet.
+Cette structure reflète **une architecture professionnelle** et prépare l’extension du moteur.
 
 ---
 
-## 🚀 Getting Started
+# 📦 Modules et Interactions
 
-Pour cloner le projet :
+## 🔹 C++ Core — Moteur Quantitatif
+
+Le cœur du projet, inspiré des moteurs quant internes aux banques :
+
+* **Instruments** : définition abstraite des produits (ex : EuropeanOption)
+* **Models** : modèles mathématiques (Black-Scholes, Heston…)
+* **Pricing** : méthodes de pricing (closed-form, MC, PDE…)
+* **Utils** : outils mathématiques (CDF normale, intégration, RNG…)
+* **Tests** : couverture unitaire
+
+Dépendances internes :
+
+```
+Instruments → Models → Pricing → Utils
+```
+
+Aucun module supérieur ne dépend d’un module inférieur.
+
+---
+
+# 🎯 Focus Actuel : Module **Black-Scholes**
+
+Le premier module complet du moteur.
+
+### Inclus :
+
+* Pricing closed-form call/put
+* Calcul de Delta & Gamma
+* Solveur de volatilité implicite (IV)
+* Séparation stricte :
+
+  * EuropeanOption
+  * BlackScholesModel
+  * BlackScholesPricer
+  * Greeks
+  * BlackScholesIVSolver
+  * NormalDistribution / MathUtils
+
+### Exemples de diagramme interne :
+
+```
+[ EuropeanOption ]
+        ↓
+[ BlackScholesPricer ]
+        ↓
+[ BlackScholesModel ] → d1, d2 → NormalDistribution
+        ↓
+Price + Greeks
+        ↑
+[ IV Solver ]
+```
+
+Ce module sert de **template architectural** pour les modèles futurs (Heston, SABR, MC).
+
+---
+
+# 🧭 Roadmap Technique (par couches)
+
+## 🔹 C++ Core
+
+* [ ] Black-Scholes closed-form
+* [ ] Greeks (Delta, Gamma, Vega, Theta)
+* [ ] IV solver robuste
+* [ ] Monte Carlo framework
+* [ ] Modèle Heston
+* [ ] Surfaces de volatilité
+
+## 🔹 API .NET
+
+* [ ] Endpoint `/pricing/bs/european`
+* [ ] Validation inputs → models Core
+* [ ] Bridge C++ (P/Invoke)
+* [ ] MarketDataService
+* [ ] Documentation Swagger
+
+## 🔹 Excel Add-in
+
+* [ ] Fonction `QRIS.BS(...)`
+* [ ] Wrapping API REST
+* [ ] Formatage résultat
+
+## 🔹 Python (Recherche)
+
+* [ ] Notebooks de validation BS
+* [ ] Comparaison C++ vs Python (sanity checks)
+* [ ] Module de calibration (future)
+
+## 🔹 SQL (Market Data)
+
+* [ ] Tables spot / taux / vol
+* [ ] Seeds basiques
+* [ ] Intégration API
+
+---
+
+# 🎒 Getting Started
+
+Cloner le projet :
 
 ```bash
 git clone https://github.com/<username>/QRIS.git
 cd QRIS
 ```
 
-Le code est organisé de façon à permettre un développement incrémental.
-Les instructions d’installation et d’exécution seront ajoutées au fur et à mesure
-de l'avancement du projet.
+Chaque module possède sa documentation associée dans `docs/`.
 
 ---
 
-## Documentation
+# 📘 Documentation
 
-La documentation complète est disponible dans le dossier `docs/` :
+La documentation complète se trouve dans :
 
-- `docs/architecture/` — design technique complet
-- `docs/project/` — description du périmètre et organisation
-- `docs/research/` — théorie quantitative et notes personnelles
-
-Chaque nouvelle fonctionnalité est accompagnée d’une documentation dédiée.
-
----
-
-## Objectif pédagogique & professionnel
-
-QRIS sert à démontrer des compétences en :
-
-- finance quantitative
-- programmation C++ orientée performance
-- architecture logicielle modulaire
-- API modernes (C# / .NET)
-- manipulation de données de marché
-- documentation technique
-- rigueur, organisation, autonomie
-
-C’est également un support d’apprentissage et d’exploration
-mathématique continue.
+```
+docs/
+  overview/         → vision globale
+  core/             → architecture du moteur C++
+  api/              → API .NET
+  excel/            → add-in Excel
+  data/             → market data
+  roadmap/          → versions futures
+  learning/         → journal d’apprentissage
+```
 
 ---
 
-## Auteur
+# 👤 Auteur
 
-Développé par : **Adrien GLUCKMAN**  
-Diplômé d’un Master en Finance Quantitative  
-À la recherche d’un poste en finance quantitative / risk / quant IT  
-Contact : adriengluckman892@hotmail.fr | linkedin.com/in/adrien-gluckman
+Développé par **Adrien GLUCKMAN**
+Master en Finance Quantitative
+Recherche un poste en :
+
+* finance quantitative
+* risk management
+* quant IT / pricing engine
+
+📩 [adriengluckman892@hotmail.fr](mailto:adriengluckman892@hotmail.fr)
+🔗 linkedin.com/in/adrien-gluckman
 
 ---
 
-## Licence
+# 📄 Licence
 
-Le projet est en cours de développement.  
 La licence sera définie ultérieurement.
+

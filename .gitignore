@@ -1,0 +1,67 @@
+# .gitignore for the QRIS C++ project
+# Ignore common build artifacts and editor temp files, while keeping
+# repository config like .vscode (do not ignore .vscode by default).
+
+# Build directories
+/build/
+/build-*/
+/build-gtest/
+
+# CMake files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+Testing/
+CTestTestfile.cmake
+
+# Compiled object files and libraries
+*.o
+*.obj
+*.lo
+*.la
+*.al
+*.a
+*.so
+*.dylib
+*.dll
+*.lib
+*.exe
+*.out
+
+# Binaries and libraries folders
+/bin/
+/lib/
+
+# macOS
+.DS_Store
+
+# Editor temporary files
+*~
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Coverage and profiling
+*.gcda
+*.gcno
+*.gcov
+coverage/
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.env/
+
+# IDEs
+.idea/
+
+# Jupyter
+*.ipynb_checkpoints
+
+# Misc
+tags
+TAGS

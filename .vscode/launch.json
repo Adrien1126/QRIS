@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    
+    {
+      "name": "Debug unit_tests",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/${config:qris.buildDir}/src/tests/unit_tests",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "lldb",
+      "preLaunchTask": "CMake: Build"
+    }
+  ]
+}

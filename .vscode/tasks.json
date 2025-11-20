@@ -1,0 +1,28 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "CMake: Configure",
+      "type": "shell",
+      "command": "cmake -S . -B ${config:qris.buildDir} -DCMAKE_BUILD_TYPE=Debug",
+      "group": { "kind": "build", "isDefault": false },
+      "problemMatcher": []
+    },
+    {
+      "label": "CMake: Build",
+      "type": "shell",
+      "command": "cmake --build ${config:qris.buildDir} --parallel",
+      "dependsOn": ["CMake: Configure"],
+      "group": "build",
+      "problemMatcher": ["$gcc"]
+    },
+    {
+      "label": "Run tests (ctest)",
+      "type": "shell",
+      "command": "ctest --test-dir ${config:qris.buildDir} -V",
+      "dependsOn": ["CMake: Build"],
+      "group": "test",
+      "problemMatcher": []
+    }
+  ]
+}

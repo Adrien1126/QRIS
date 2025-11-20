@@ -1,0 +1,13 @@
+{
+  // Central build directory used by tasks and launch configurations
+  "qris.buildDir": "build-gtest",
+
+  "cmake.buildDirectory": "${workspaceFolder}/${config:qris.buildDir}",
+  "cmake.configureOnOpen": false,
+  "cmake.generator": "Unix Makefiles",
+  "cmake.parallelJobs": 0,
+
+  // Test Explorer
+  "testExplorer.codeLens": true,
+  "testExplorer.autoRun": "off"
+}

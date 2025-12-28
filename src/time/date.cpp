@@ -79,6 +79,16 @@ Date::Date(int serialNumber)
     validate(day_, month_, year_);
 }
 
+WeekDay Date::weekDay() const
+{
+    int serial = dateToSerialNumber();
+    int offset = serial - 1;
+
+    int dayIndex = offset % 7;
+
+    return static_cast<WeekDay>(dayIndex);
+}
+
 bool Date::operator==(const Date &other) const
 {
     return this->dateToSerialNumber() == other.dateToSerialNumber();

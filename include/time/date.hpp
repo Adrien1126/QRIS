@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <string>
+#include "time/weekday.hpp"
 
 
 namespace qris::time {

@@ -1,25 +1,61 @@
-cmake_minimum_required(VERSION 3.10)
-project(QRIS VERSION 0.1 LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.20)
+project(mathcore VERSION 1.0 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+# Standard C++
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-enable_testing()
+# Options globales de compilation (propagées à toutes les targets)
+add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
-# --------------------------------------------------------------------
-# GoogleTest (FetchContent) — required to build gtests automatically
-# --------------------------------------------------------------------
-include(FetchContent)
+# Option pour activer/désactiver les tests
+option(BUILD_TESTS "Build unit tests" ON)
 
-FetchContent_Declare(
-	googletest
-	GIT_REPOSITORY https://github.com/google/googletest.git
-	GIT_TAG v1.14.0
+if (BUILD_TESTS)
+    include(FetchContent)
+
+    FetchContent_Declare(
+        googletest
+        URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
+    )
+
+    # Empêche GoogleTest de forcer des options qui pollueraient le projet
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+
+    FetchContent_MakeAvailable(googletest)
+endif()
+
+add_library(qris_lib
+    src/time/date.cpp
 )
 
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
+add_library(qris::qris ALIAS qris_lib)
 
-# Subprojects
-add_subdirectory(src/core)
-add_subdirectory(src/tests)
+target_include_directories(qris_lib
+    PUBLIC
+        include
+)
+
+add_executable(program src/main.cpp)
+
+target_link_libraries(program
+    PRIVATE
+        qris::qris
+)
+
+if (BUILD_TESTS)
+    enable_testing()
+
+    add_executable(tests
+        tests/test_main.cpp
+        tests/test_time/test_date.cpp
+    )
+
+    target_link_libraries(tests
+        PRIVATE
+            qris::qris
+            gtest_main
+    )
+
+    add_test(NAME qris_tests COMMAND tests)
+endif()

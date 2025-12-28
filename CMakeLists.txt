@@ -27,6 +27,7 @@ endif()
 
 add_library(qris_lib
     src/time/date.cpp
+	src/time/calendar.cpp
 )
 
 add_library(qris::qris ALIAS qris_lib)
@@ -49,6 +50,7 @@ if (BUILD_TESTS)
     add_executable(tests
         tests/test_main.cpp
         tests/test_time/test_date.cpp
+		tests/test_time/test_calendar.cpp
     )
 
     target_link_libraries(tests

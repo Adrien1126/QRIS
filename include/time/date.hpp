@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 #include <string>
-#include "time/weekday.hpp"
+#include "time/weekDay.hpp"
 
 
 namespace qris::time {
@@ -124,6 +124,7 @@ public:
     int day() const   { return day_; }
     int month() const { return month_; }
     int year() const  { return year_; }
+    WeekDay weekDay() const;
 
     // ---------------------------------------------------------------------
     // Comparaisons (ordre total strict)

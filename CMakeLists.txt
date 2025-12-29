@@ -29,6 +29,7 @@ add_library(qris_lib
     src/time/date.cpp
 	src/time/calendar.cpp
     src/time/businessDayConvention.cpp
+    src/time/dayCountConvention.cpp
 )
 
 add_library(qris::qris ALIAS qris_lib)
@@ -53,6 +54,7 @@ if (BUILD_TESTS)
         tests/test_time/test_date.cpp
 		tests/test_time/test_calendar.cpp
         tests/test_time/test_business_day_convention.cpp
+        tests/test_time/test_day_count_convention.cpp
     )
 
     target_link_libraries(tests

@@ -1,6 +1,6 @@
 #pragma once
 
-namespace qris::core {
+namespace qris::contract {
     enum class CouponType {
         Fixed, 
         Floating, 

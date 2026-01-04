@@ -1,77 +1,85 @@
-# Cashflow — API cible (contrat métier)
+# Cashflow — Spécification contractuelle
 
 ## 1. Définition canonique
 
-Un **cashflow** est un **flux contractuel élémentaire**, représentant une **promesse de paiement future** associée à un instrument financier, **sans aucune logique de valorisation**.
+Un **Cashflow** représente un **flux contractuel élémentaire**, c’est-à-dire une **promesse de paiement future** associée à un instrument financier, **indépendante de toute logique de valorisation**.
 
-Il constitue la **brique atomique contractuelle** à partir de laquelle sont construites :
+Il constitue la **brique atomique contractuelle** du moteur, à partir de laquelle sont construits :
 
-* les legs,
-* puis les instruments financiers,
-* puis les opérations de pricing.
+* les *legs*,
+* les instruments financiers,
+* puis les opérations de pricing, de risque et de reporting.
 
-> Un cashflow décrit **ce qui doit être payé, quand, et selon quelles règles contractuelles**, mais jamais combien cela vaut aujourd’hui.
+> Un cashflow décrit **ce qui est dû**, **quand**, **dans quelle devise**, et **selon quelles règles contractuelles**,
+> mais **ne dit jamais combien cela vaut aujourd’hui**.
 
 ---
 
-## 2. Nature et invariants fondamentaux
+## 2. Nature de l’objet et invariants fondamentaux
 
 ### 2.1 Objet métier immuable
 
-Un `Cashflow` est :
+Un `Cashflow` est un **objet métier strictement immuable** :
 
-* **immuable après construction**,
-* figé contractuellement,
-* entièrement déterministe.
+* son état est entièrement défini à la construction,
+* aucune mutation n’est possible après instanciation,
+* toute modification contractuelle implique la création d’un **nouvel objet**.
 
-Toute variation contractuelle (date, notionnel, coupon, signe) implique la création d’un **nouvel objet**.
+Cette immutabilité garantit :
 
----
-
-### 2.2 Brique atomique non autonome
-
-Un cashflow :
-
-* **n’a pas de sens économique seul**,
-* existe uniquement comme composant d’une :
-
-  * leg,
-  * obligation,
-  * swap,
-  * instrument composite.
-
-Il peut cependant être **construit et inspecté indépendamment** à des fins de test, d’audit ou de validation contractuelle.
+* la sûreté des calculs en aval,
+* l’absence d’effets de bord,
+* la stabilité des audits contractuels.
 
 ---
 
-## 3. Frontières strictes (séparation contractuel / calcul)
-
-### 3.1 Ce que Cashflow ne fait PAS
+### 2.2 Objet contractuel non autonome
 
 Un cashflow :
 
-* ❌ ne connaît pas les données de marché,
-* ❌ ne connaît aucune courbe,
+* **n’a pas de sens économique isolément**,
+* existe exclusivement comme composant d’un ensemble contractuel plus large
+  (leg, obligation, swap, instrument composite).
+
+Il peut toutefois être :
+
+* construit indépendamment,
+* inspecté via son API,
+* testé et validé isolément,
+
+à des fins de **validation contractuelle**, **audit** ou **tests unitaires**.
+
+---
+
+## 3. Frontières strictes : contrat vs calcul
+
+### 3.1 Responsabilités explicitement exclues
+
+Un `Cashflow` :
+
+* ❌ ne connaît **aucune donnée de marché**,
+* ❌ ne connaît **aucune courbe** (discount, forward, funding),
 * ❌ ne s’actualise pas,
-* ❌ ne calcule aucune valeur présente,
+* ❌ ne calcule aucun montant,
 * ❌ ne contient aucun pricer,
-* ❌ ne dépend pas d’un instrument,
-* ❌ ne déplace pas ses dates.
+* ❌ ne dépend d’aucun instrument financier,
+* ❌ ne modifie ni n’ajuste ses dates.
 
-Toute logique de calcul est **exclusivement** déléguée aux modules de pricing.
+Toute logique numérique ou financière est **exclusivement déléguée** aux modules de pricing.
 
 ---
 
-### 3.2 Ce que Cashflow PEUT connaître
+### 3.2 Responsabilités autorisées
 
-Un cashflow peut contenir **des informations contractuelles**, même si elles sont utilisées plus tard au pricing :
+Un `Cashflow` peut porter des **informations contractuelles descriptives**, nécessaires aux calculs futurs mais **sans jamais les effectuer** :
 
 * type de coupon,
-* index sous-jacent (le cas échéant),
+* paramètres du coupon (taux, index, spread),
 * convention de day count,
-* accrual period.
+* période d’accrual,
+* date de fixing (le cas échéant).
 
-Ces informations sont **descriptrices**, pas calculatoires.
+Ces informations sont **descriptrices**, jamais calculatoires.
 
 ---
 
@@ -81,15 +89,17 @@ Ces informations sont **descriptrices**, pas calculatoires.
 
 Un cashflow porte explicitement :
 
-* **date de paiement** (obligatoire),
-* **accrual start date** (si applicable),
-* **accrual end date** (si applicable),
-* **fixing date** (si applicable, cashflow flottant).
+* une **date de paiement** (obligatoire),
+* une **date de début d’accrual** (optionnelle),
+* une **date de fin d’accrual** (optionnelle),
+* une **date de fixing** (optionnelle, cashflows flottants).
 
-Toutes les dates sont :
+Toutes les dates sont supposées :
 
-* déjà **ajustées par les conventions**,
-* fournies par la leg lors de la construction.
+* déjà ajustées par les conventions calendaires et business day,
+* fournies par la *leg* lors de la construction.
+
+Le cashflow **ne réalise aucun ajustement de dates**.
 
 ---
 
@@ -98,57 +108,61 @@ Toutes les dates sont :
 Un cashflow porte :
 
 * une **devise**,
-* un **notionnel** (éventuellement amorti),
-* une **direction** (payer / receiver),
-* une **description de coupon**.
+* un **notionnel** strictement positif,
+* une **direction économique** (*Pay* / *Receive*),
+* une **description contractuelle de coupon**.
+
+Le signe économique du flux est **porté par la direction**, jamais par le notionnel.
 
 ---
 
 ### 4.3 Description du coupon
 
-Un cashflow peut être :
+Le coupon associé à un cashflow décrit les **règles contractuelles de calcul**, sans jamais produire de montant.
+
+Il peut être :
 
 * **fixe** :
 
-  * taux connu,
+  * taux contractuel connu,
 * **flottant** :
 
-  * index (ex: EURIBOR 3M),
+  * index de référence (ex. *EURIBOR 3M*),
   * spread contractuel,
-* **optionnel** (extensible) :
+* **optionnel / extensible** :
 
   * cap,
-  * floor.
+  * floor,
+  * autres structures futures.
 
-Le cashflow **ne calcule jamais le coupon**, il **décrit les règles** permettant de le calculer plus tard.
+Le cashflow **possède** son coupon et en expose une **référence constante**.
 
 ---
 
-## 5. Relation avec les conventions
+## 5. Conventions financières
 
 ### 5.1 Day Count Convention
 
-Contrairement au calendrier et aux business day conventions :
-
-* la **Day Count Convention appartient au cashflow**.
+La **Day Count Convention appartient au coupon**, et donc indirectement au cashflow.
 
 Justification métier :
 
 * une même leg peut contenir des cashflows soumis à des conventions différentes,
-* le day count est une **règle de calcul locale au flux**, pas globale à la leg.
+* le day count est une **règle locale au flux**, pas une règle globale à la leg.
 
-Le cashflow expose donc sa convention de day count, **sans jamais effectuer le calcul**.
+Le cashflow expose cette convention **sans jamais effectuer le calcul de fraction d’année**.
 
 ---
 
-## 6. API publique cible (conceptuelle)
+## 6. API publique (vue conceptuelle)
 
-Un `Cashflow` expose en lecture seule :
+Un `Cashflow` expose **uniquement des accesseurs en lecture seule**.
 
 ### 6.1 Accesseurs temporels
 
 * date de paiement,
-* accrual start / end,
+* accrual start date (si existante),
+* accrual end date (si existante),
 * fixing date (si existante).
 
 ---
@@ -157,60 +171,60 @@ Un `Cashflow` expose en lecture seule :
 
 * devise,
 * notionnel,
-* direction,
+* direction (*Pay / Receive*),
+* coupon (via interface polymorphique),
 * type de coupon,
-* index sous-jacent (si applicable),
-* spread (si applicable),
-* taux fixe (si applicable),
-* day count convention.
+* paramètres du coupon (taux, index, spread),
+* convention de day count.
 
 ---
 
-### 6.3 Aucune méthode de calcul
+### 6.3 Absence volontaire de méthodes de calcul
 
-Il n’existe **aucune méthode** du type :
+Il n’existe **délibérément aucune méthode** du type :
 
 * `amount()`,
 * `value()`,
 * `npv()`,
 * `yearFraction()`.
 
-Ces méthodes relèvent exclusivement du **pricing engine**.
+Ces méthodes relèvent **exclusivement** du moteur de pricing.
 
 ---
 
 ## 7. Rôle du Cashflow dans le moteur
 
-Le cashflow sert à :
+Le cashflow constitue un **point de vérité contractuelle**.
+Il est utilisé pour :
 
 * vérifier la cohérence contractuelle d’un instrument,
-* auditer les schedules générés par une leg,
+* auditer les échéanciers générés par une leg,
 * fournir une entrée propre et stable au pricing,
 * supporter le reporting contractuel,
-* préparer des extensions futures (XVA, sensitivités, export).
-
-Il constitue un **point de vérité contractuelle**.
+* préparer les extensions futures (sensibilités, XVA, export).
 
 ---
 
-## 8. Extensibilité
+## 8. Extensibilité du design
 
-Le design du cashflow permet :
+Le design du `Cashflow` permet :
 
 * l’ajout de nouveaux types de coupons,
-* l’ajout de paramètres optionnels,
-* l’intégration future avec une base de données,
+* l’introduction de paramètres contractuels optionnels,
+* une intégration future avec une base de données,
 * l’export vers des systèmes externes.
 
-Sans modification de l’API fondamentale.
+Le tout **sans modification de l’API fondamentale**.
 
 ---
 
-## 9. Résumé des décisions clés
+## 9. Synthèse des décisions structurantes
 
-* Cashflow = **donnée contractuelle pure**
-* Immuable
-* Sans pricing
-* Porte ses dates et conventions locales
-* Utilisable pour audit et construction
-* Élément atomique du moteur
+* `Cashflow` est une **donnée contractuelle pure**
+* objet **immuable**
+* **aucune logique de pricing**
+* porte ses dates et conventions locales
+* utilisable pour audit et construction
+* **élément atomique du moteur**
+
+

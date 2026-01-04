@@ -33,6 +33,7 @@ add_library(qris_lib
     src/core/types/currency.cpp
     src/contract/coupon/fixedCoupon.cpp
     src/contract/coupon/floatingCoupon.cpp
+    src/contract/cashflow.cpp
 )
 
 add_library(qris::qris ALIAS qris_lib)
@@ -61,6 +62,7 @@ if (BUILD_TESTS)
         tests/test_core/types/test_currency.cpp
         tests/test_contract/coupon/test_fixedCoupon.cpp
         tests/test_contract/coupon/test_floatingCoupon.cpp
+        tests/test_contract/test_cashflow.cpp
     )
 
     target_link_libraries(tests

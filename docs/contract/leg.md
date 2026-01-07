@@ -10,7 +10,7 @@ Elle constitue le **niveau intermédiaire fondamental** entre :
 * et les *instruments financiers* (swap, obligation, IRS, etc.).
 
 > Une leg ne valorise rien :
-> elle **définit contractuellement comment une série de flux doit être générée**.
+> elle **définit contractuellement comment une série de flux doit être générée**, sans jamais effectuer de calcul de montant.
 
 ---
 
@@ -22,10 +22,10 @@ Contrairement à `Cashflow`, une `Leg` **n’est pas un simple conteneur passif*
 
 Elle est responsable de :
 
-* la **construction du schedule contractuel**,
-* l’**application des conventions calendaires**,
-* la **gestion des décalages contractuels** (paiement, fixing),
-* la **génération des cashflows** correspondants.
+* la **définition des paramètres contractuels temporels**,
+* l’**orchestration de la génération du schedule contractuel**,
+* l’**application des conventions calendaires et des décalages contractuels**,
+* la **génération des cashflows finaux et ajustés**.
 
 La `Leg` est donc un **objet contractuel génératif**, mais **strictement non calculatoire**.
 
@@ -35,15 +35,17 @@ La `Leg` est donc un **objet contractuel génératif**, mais **strictement non c
 
 Une `Leg` est **strictement immuable après construction** :
 
-* l’intégralité des cashflows est générée au constructeur,
-* aucun recalcul ou ajustement n’est autorisé ultérieurement,
-* toute modification contractuelle implique la création d’une **nouvelle leg**.
+* l’intégralité du schedule est générée une seule fois,
+* l’intégralité des cashflows est instanciée au constructeur,
+* aucun recalcul ou ajustement n’est autorisé ultérieurement.
+
+Toute modification contractuelle implique la création d’une **nouvelle instance de Leg**.
 
 Cette immutabilité garantit :
 
-* la stabilité des flux,
+* la stabilité contractuelle des flux,
 * la sûreté des calculs en aval,
-* la reproductibilité des audits contractuels.
+* la reproductibilité des audits.
 
 ---
 
@@ -59,7 +61,7 @@ Une `Leg` :
 * ❌ ne valorise pas les cashflows,
 * ❌ ne dépend d’aucun moteur de pricing.
 
-Elle appartient **exclusivement** à la couche *contractuelle*.
+Elle appartient **exclusivement à la couche contractuelle**.
 
 ---
 
@@ -67,18 +69,42 @@ Elle appartient **exclusivement** à la couche *contractuelle*.
 
 Une `Leg` est responsable de :
 
-* la génération des **dates de période**,
-* l’application des **business day conventions**,
-* la gestion des **stubs**,
+* la configuration des règles temporelles contractuelles,
+* l’orchestration de la génération de l’échéancier,
+* l’application des règles de stub,
 * l’application du **payment delay**,
-* l’application du **fixing lag** (legs flottantes),
-* la création des **cashflows ajustés et finalisés**.
+* l’application du **fixing lag** (le cas échéant),
+* la création de cashflows **contractuellement finalisés**.
 
 ---
 
-## 4. Relation entre Leg et Cashflow
+## 4. Relation entre Leg, ScheduleBuilder et Cashflow
 
-### 4.1 Génération et propriété
+### 4.1 Séparation des responsabilités
+
+La génération temporelle est scindée en deux niveaux distincts :
+
+* **ScheduleBuilder**
+
+  * génère un échéancier contractuel cohérent,
+  * applique les règles de fréquence, de stub et d’ajustement calendaire,
+  * ne connaît ni notionnel, ni coupon, ni direction.
+
+* **Leg**
+
+  * configure le `ScheduleBuilder`,
+  * consomme l’échéancier généré,
+  * transforme chaque période en `Cashflow`.
+
+Cette séparation garantit :
+
+* une responsabilité unique par composant,
+* une testabilité fine du module temporel,
+* une extensibilité propre.
+
+---
+
+### 4.2 Génération et propriété des Cashflows
 
 Une `Leg` :
 
@@ -94,7 +120,7 @@ Les cashflows :
 
 ---
 
-### 4.2 Ajustement des dates
+### 4.3 Ajustement des dates
 
 Toutes les dates contenues dans les `Cashflow` :
 
@@ -146,19 +172,33 @@ Une `Leg` est définie par les paramètres contractuels suivants :
 
 * **start date**
 * **end date**
-* **fréquence de paiement**
-* **fréquence de fixing** (le cas échéant)
+* **fréquence de paiement** (`Period`)
 * **calendar**
 * **business day convention**
-* **règle de stub** (front / back, short / long)
+* **règle de stub** (`StubRule`)
 * **payment delay**
-* **fixing lag** (legs flottantes)
+* **fixing lag** (legs flottantes uniquement)
 
 Ces paramètres définissent **l’intégralité du schedule contractuel**.
 
 ---
 
-### 6.2 Payment Delay
+### 6.2 Rôle du ScheduleBuilder
+
+La génération de l’échéancier est **déléguée à un composant dédié** (`ScheduleBuilder`).
+
+Ce composant est responsable exclusivement de :
+
+* la génération des dates de période,
+* l’application des règles de stub,
+* l’ajustement calendaire,
+* la cohérence temporelle globale.
+
+La `Leg` **configure et consomme** ce schedule, sans en porter la logique interne.
+
+---
+
+### 6.3 Payment Delay
 
 Le **payment delay** représente le décalage contractuel entre :
 
@@ -168,16 +208,12 @@ Le **payment delay** représente le décalage contractuel entre :
 Caractéristiques :
 
 * exprimé en nombre de jours ouvrés,
-* appliqué **après** la génération des dates de période,
+* appliqué après la génération de l’échéancier,
 * ajusté selon le calendrier et la business day convention.
-
-La `Leg` est responsable de :
-
-> `paymentDate = adjust(accrualEndDate + paymentDelay)`
 
 ---
 
-### 6.3 Fixing Lag
+### 6.4 Fixing Lag
 
 Le **fixing lag** représente le décalage contractuel entre :
 
@@ -187,13 +223,8 @@ Le **fixing lag** représente le décalage contractuel entre :
 Caractéristiques :
 
 * exprimé en nombre de jours ouvrés,
-* applicable uniquement aux **legs flottantes**,
-* calculé à partir de la date d’accrual start,
+* applicable uniquement aux legs flottantes,
 * ajusté selon le calendrier et la business day convention.
-
-La `Leg` est responsable de :
-
-> `fixingDate = adjust(accrualStartDate − fixingLag)`
 
 ---
 
@@ -201,10 +232,7 @@ La `Leg` est responsable de :
 
 ### 7.1 Coupon au niveau de la Leg
 
-Une `Leg` porte :
-
-* un **prototype de coupon**,
-* utilisé pour générer les coupons associés à chaque cashflow.
+Une `Leg` porte un **prototype de coupon**, utilisé pour instancier les coupons associés à chaque cashflow.
 
 Chaque `Cashflow` possède ensuite **son propre coupon**, immuable.
 
@@ -248,25 +276,13 @@ Justification :
 
 Une `Leg` expose :
 
-### 9.1 Accès aux cashflows
-
 * une collection ordonnée de `Cashflow`,
-* exposée en **lecture seule**,
+* en **lecture seule**,
 * stable dans le temps.
 
-Une implémentation par `std::vector<Cashflow>` est adaptée.
+Une implémentation par `std::vector<Cashflow>` est appropriée.
 
----
-
-### 9.2 Absence volontaire de calcul
-
-Il n’existe **aucune méthode** du type :
-
-* `amount()`
-* `npv()`
-* `value()`
-
-Ces responsabilités relèvent exclusivement du **pricing engine**.
+Aucune méthode de calcul financier n’est exposée.
 
 ---
 
@@ -279,7 +295,7 @@ Une `Leg` garantit, dès sa construction :
 * un notionnel strictement positif,
 * des cashflows ordonnés et valides,
 * des dates ajustées conformément aux conventions,
-* la cohérence des `paymentDelay` et `fixingLag`.
+* la cohérence des délais contractuels.
 
 Toute violation entraîne une **exception immédiate**.
 
@@ -301,10 +317,8 @@ La `Leg` :
 
 * `Leg` = **entité contractuelle générative**
 * Immuable après construction
+* Orchestration via `ScheduleBuilder`
 * Génère et possède ses `Cashflow`
-* Gère schedule, stubs, conventions, delays
+* Gère conventions, stubs et délais
 * Homogène par construction
 * Sans logique de pricing
-* Élément structurant des instruments
-
-

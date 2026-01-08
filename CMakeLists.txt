@@ -36,6 +36,7 @@ add_library(qris_lib
     src/contract/cashflow.cpp
     src/time/period.cpp
     src/time/time_arithmetic.cpp
+    src/time/scheduleBuilder.cpp
 )
 
 add_library(qris::qris ALIAS qris_lib)
@@ -67,6 +68,8 @@ if (BUILD_TESTS)
         tests/test_contract/test_cashflow.cpp
         tests/test_time/test_period.cpp
         tests/test_time/test_time_arithmetic.cpp
+        tests/test_time/test_scheduleBuilder.cpp
+        tests/test_time/test_schedule.cpp
     )
 
     target_link_libraries(tests

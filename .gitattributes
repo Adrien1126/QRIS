@@ -1,0 +1,11 @@
+# --- Force C++ as primary language ---
+*.cpp linguist-language=C++
+*.hpp linguist-language=C++
+*.h   linguist-language=C++
+
+# --- Prevent CMake from dominating stats ---
+CMakeLists.txt linguist-language=C++
+*.cmake linguist-generated=true
+
+# --- Documentation ---
+docs/** linguist-documentation=true

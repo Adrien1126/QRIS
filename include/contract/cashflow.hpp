@@ -26,7 +26,7 @@ private:
     qris::core::Currency currency_;
     double notional_;
     qris::core::PayReceive direction_;
-    std::unique_ptr<const Coupon> coupon_;
+    std::shared_ptr<const Coupon> coupon_;
 
 private:
     // Validation des invariants contractuels
@@ -42,7 +42,7 @@ public:
         qris::core::Currency currency,
         double notional,
         qris::core::PayReceive direction,
-        std::unique_ptr<const Coupon> coupon);
+        std::shared_ptr<const Coupon> coupon);
 
     // Getters temporels
     const Date& paymentDate() const { return paymentDate_; }

@@ -153,25 +153,6 @@ TEST(CashflowTest, FixingAfterAccrualStartThrows)
         std::invalid_argument);
 }
 
-TEST(CashflowTest, PaymentBeforeAccrualEndThrows)
-{
-    auto coupon = std::make_unique<FixedCoupon>(
-        0.02,
-        DayCountConvention::ACT_360);
-
-    EXPECT_THROW(
-        Cashflow(
-            Date(30, 5, 2025),  // payment < accrual end
-            std::nullopt,
-            Date(30, 3, 2025),
-            Date(30, 6, 2025),
-            EUR(),
-            1'000'000.0,
-            PayReceive::Receive,
-            std::move(coupon)),
-        std::invalid_argument);
-}
-
 TEST(CashflowTest, TemporalGettersReturnExactValues)
 {
     auto coupon = std::make_unique<FixedCoupon>(

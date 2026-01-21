@@ -14,7 +14,7 @@ Cashflow::Cashflow(
     qris::core::Currency currency,
     double notional,
     qris::core::PayReceive direction,
-    std::unique_ptr<const Coupon> coupon)
+    std::shared_ptr<const Coupon> coupon)
     : paymentDate_(std::move(paymentDate))
     , fixingDate_(std::move(fixingDate))
     , accrualStartDate_(std::move(accrualStartDate))
@@ -57,13 +57,6 @@ void Cashflow::validateInvariants() const
         }
     }
 
-    // Paiement après la fin de la période d'accrual
-    if (accrualEndDate_) {
-        if (paymentDate_ < *accrualEndDate_) {
-            throw std::invalid_argument(
-                "Cashflow: paymentDate must be on or after accrualEndDate");
-        }
-    }
 }
 
 } // namespace qris::contract

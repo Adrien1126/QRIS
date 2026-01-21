@@ -37,6 +37,10 @@ add_library(qris_lib
     src/time/period.cpp
     src/time/time_arithmetic.cpp
     src/time/scheduleBuilder.cpp
+    src/contract/leg/leg.cpp
+    src/contract/leg/fixedLeg.cpp
+    src/audit/fixedLegAudit.cpp
+    src/audit/toString.cpp
 )
 
 add_library(qris::qris ALIAS qris_lib)
@@ -52,6 +56,16 @@ target_link_libraries(program
     PRIVATE
         qris::qris
 )
+
+add_executable(audit_fixed_leg
+    apps/auditFixedLeg.cpp
+)
+
+target_link_libraries(audit_fixed_leg
+    PRIVATE
+        qris::qris
+)
+
 
 if (BUILD_TESTS)
     enable_testing()
@@ -70,6 +84,7 @@ if (BUILD_TESTS)
         tests/test_time/test_time_arithmetic.cpp
         tests/test_time/test_scheduleBuilder.cpp
         tests/test_time/test_schedule.cpp
+        tests/test_contract/leg/test_fixedLeg.cpp
     )
 
     target_link_libraries(tests

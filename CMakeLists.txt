@@ -41,6 +41,7 @@ add_library(qris_lib
     src/contract/leg/fixedLeg.cpp
     src/audit/fixedLegAudit.cpp
     src/audit/toString.cpp
+    src/core/types/rateIndex.cpp
 )
 
 add_library(qris::qris ALIAS qris_lib)
@@ -85,6 +86,7 @@ if (BUILD_TESTS)
         tests/test_time/test_scheduleBuilder.cpp
         tests/test_time/test_schedule.cpp
         tests/test_contract/leg/test_fixedLeg.cpp
+        tests/test_core/types/test_rateIndex.cpp
     )
 
     target_link_libraries(tests

@@ -7,24 +7,17 @@
 
 namespace qris::contract {
 
-FloatingCoupon::FloatingCoupon(std::string indexName,
+FloatingCoupon::FloatingCoupon(std::shared_ptr<const qris::core::RateIndex> index,
                                double spread,
                                qris::time::DayCountConvention dayCount)
-    : indexName_(std::move(indexName)),
+    : index_(std::move(index)),
       spread_(spread),
       dayCount_(dayCount)
 {
-    // --- Validation de l'index ---
-    if (indexName_.empty()) {
+    // -- Validation de l'index --
+    if (!index_) {
         throw std::invalid_argument(
-            "FloatingCoupon: index name must not be empty");
-    }
-
-    // Vérifie que l'index n'est pas composé uniquement d'espaces
-    if (std::all_of(indexName_.begin(), indexName_.end(),
-                    [](unsigned char c) { return std::isspace(c); })) {
-        throw std::invalid_argument(
-            "FloatingCoupon: index name must not be blank");
+            "FloatingCoupon: RateIndex pointer must not be null");
     }
 
     // --- Validation du spread ---

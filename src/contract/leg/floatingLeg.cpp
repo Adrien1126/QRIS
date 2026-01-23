@@ -1,4 +1,4 @@
-#include "contract/leg/fixedLeg.hpp"
+#include "contract/leg/floatingLeg.hpp"
 
 #include "time/scheduleBuilder.hpp"
 #include "time/businessDayConvention.hpp"
@@ -12,7 +12,7 @@ namespace qris::contract {
 using qris::time::ScheduleBuilder;
 using qris::time::adjustDate;
 
-FixedLeg::FixedLeg(
+FloatingLeg::FloatingLeg(
     qris::time::Date startDate,
     qris::time::Date endDate,
     qris::time::Period accrualPeriod,
@@ -20,10 +20,12 @@ FixedLeg::FixedLeg(
     qris::time::BusinessDayConvention bdc,
     qris::time::StubRule stubRule,
     int paymentDelay,
+    int fixingLag,
     double notional,
     qris::core::Currency currency,
     qris::core::PayReceive payReceive,
-    double fixedRate,
+    std::shared_ptr<const qris::core::RateIndex> index,
+    double spread,
     qris::time::DayCountConvention dayCount
 )
 : Leg(
@@ -38,12 +40,20 @@ FixedLeg::FixedLeg(
       currency,
       payReceive
   )
-, coupon_(std::make_shared<FixedCoupon>(fixedRate, dayCount))
+, coupon_(std::make_shared<FloatingCoupon>(index, spread, dayCount))
 {
-    if (fixedRate <= 0.0) {
+    // ----------------------------
+    // Validations locales
+    // ----------------------------
+
+    if (!index) {
         throw std::invalid_argument(
-            "FixedLeg: fixedRate must be strictly positive");
+            "FloatingLeg: RateIndex must not be null");
     }
+
+    // ----------------------------
+    // Construction du schedule
+    // ----------------------------
 
     ScheduleBuilder builder(
         startDate_,
@@ -54,12 +64,19 @@ FixedLeg::FixedLeg(
 
     const auto schedule = builder.build();
 
-
     cashflows_.reserve(schedule.size());
 
     for (const auto& [accrualStart, accrualEnd] : schedule.accruals()) {
 
-        // Date de paiement = fin d'accrual + paymentDelay (jours civils)
+        // ----------------------------
+        // Fixing date
+        // ----------------------------
+        qris::time::Date fixingDate = 
+            qris::time::shiftBusinessDays(accrualStart, -fixingLag, index->fixingCalendar());
+
+        // ----------------------------
+        // Payment date
+        // ----------------------------
         Date rawPaymentDate = 
             shiftBusinessDays(accrualEnd, paymentDelay_, calendar_);
 
@@ -69,7 +86,7 @@ FixedLeg::FixedLeg(
 
         Cashflow cf(
             paymentDate,
-            std::nullopt,
+            fixingDate,
             accrualStart,
             accrualEnd,
             currency_,
@@ -80,6 +97,10 @@ FixedLeg::FixedLeg(
 
         cashflows_.push_back(std::move(cf));
     }
+
+    // ----------------------------
+    // Ordonnancement & invariants
+    // ----------------------------
 
     std::sort(
         cashflows_.begin(),

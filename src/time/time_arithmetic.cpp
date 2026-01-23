@@ -133,4 +133,30 @@ Date subtractPeriod(const Date& d, const Period& p)
     }
 }
 
+Date shiftBusinessDays(
+    const Date& d,
+    int businessDays,
+    const Calendar& calendar)
+{
+    // Cas trivial
+    if (businessDays == 0) {
+        return d;
+    }
+
+    Date current = d;
+    int remaining = businessDays;
+
+    // Sens du déplacement
+    const int step = (businessDays > 0) ? 1 : -1;
+
+    while (remaining != 0) {
+        current = current.addDays(step);
+
+        if (calendar.isBusinessDay(current)) {
+            remaining -= step;
+        }
+    }
+
+    return current;
+}
 } // namespace qris::time

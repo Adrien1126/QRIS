@@ -9,6 +9,10 @@ using qris::time::Date;
 using qris::time::DayCountConvention;
 using qris::core::Currency;
 using qris::core::PayReceive;
+using qris::core::RateIndex;
+using qris::time::Period; 
+using qris::time::PeriodUnit; 
+using qris::time::Calendar; 
 
 // -----------------------------------------------------------------------------
 // Helpers
@@ -17,6 +21,18 @@ using qris::core::PayReceive;
 static Currency EUR()
 {
     return Currency("EUR");
+}
+
+static std::shared_ptr<const RateIndex> makeEuribor3M()
+{
+    return std::make_shared<const RateIndex>(
+        "EURIBOR_3M",
+        Currency("EUR"),
+        Period(3, PeriodUnit::M),
+        2,
+        qris::time::DayCountConvention::ACT_360,
+        Calendar("TARGET", {})
+    );
 }
 
 // -----------------------------------------------------------------------------
@@ -55,7 +71,7 @@ TEST(CashflowTest, FixedCashflowValid)
 TEST(CashflowTest, FloatingCashflowValid)
 {
     auto coupon = std::make_unique<FloatingCoupon>(
-        "EURIBOR_3M",
+        makeEuribor3M(),
         0.001,
         DayCountConvention::ACT_360);
 
@@ -136,7 +152,7 @@ TEST(CashflowTest, AccrualEndBeforeStartThrows)
 TEST(CashflowTest, FixingAfterAccrualStartThrows)
 {
     auto coupon = std::make_unique<FloatingCoupon>(
-        "EURIBOR_3M",
+        makeEuribor3M(),
         0.001,
         DayCountConvention::ACT_360);
 
@@ -212,7 +228,7 @@ TEST(CashflowTest, OptionalDatesAreEmptyWhenNotProvided)
 TEST(CashflowTest, FinancialGettersReturnExactValues)
 {
     auto coupon = std::make_unique<FloatingCoupon>(
-        "EURIBOR_6M",
+        makeEuribor3M(),
         0.0025,
         DayCountConvention::ACT_360);
 
@@ -238,7 +254,7 @@ TEST(CashflowTest, FinancialGettersReturnExactValues)
 TEST(CashflowTest, CouponGetterReturnsCorrectPolymorphicType)
 {
     auto coupon = std::make_unique<FloatingCoupon>(
-        "EURIBOR_3M",
+        makeEuribor3M(),
         0.001,
         DayCountConvention::ACT_360);
 

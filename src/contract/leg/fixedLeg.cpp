@@ -2,6 +2,7 @@
 
 #include "time/scheduleBuilder.hpp"
 #include "time/businessDayConvention.hpp"
+#include "time/time_arithmetic.hpp"
 
 #include <algorithm>
 #include <stdexcept>
@@ -59,11 +60,12 @@ FixedLeg::FixedLeg(
     for (const auto& [accrualStart, accrualEnd] : schedule.accruals()) {
 
         // Date de paiement = fin d'accrual + paymentDelay (jours civils)
-        qris::time::Date rawPaymentDate =
-            accrualEnd.addDays(paymentDelay_);
+        Date rawPaymentDate = 
+            shiftBusinessDays(accrualEnd, paymentDelay_, calendar_);
 
-        qris::time::Date paymentDate =
+        Date paymentDate =
             adjustDate(rawPaymentDate, calendar_, bdc_);
+
 
         Cashflow cf(
             paymentDate,

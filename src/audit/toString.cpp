@@ -46,4 +46,19 @@ std::string toString(qris::core::PayReceive pr)
     return (pr == qris::core::PayReceive::Pay) ? "Pay" : "Receive";
 }
 
+std::string toString(qris::time::DayCountConvention dcc)
+{
+    switch (dcc) {
+        case qris::time::DayCountConvention::ACT_360:
+            return "ACT/360";
+        case qris::time::DayCountConvention::ACT_365F:
+            return "ACT/365F";
+        case qris::time::DayCountConvention::THIRTY_E_360:
+            return "30E/360";
+        case qris::time::DayCountConvention::THIRTY_360_US:
+            return "30/360 US";
+    }
+    throw std::logic_error("Unknown DayCountConvention");
+}
+
 }

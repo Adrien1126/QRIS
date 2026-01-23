@@ -2,13 +2,31 @@
 
 #include "time/date.hpp"
 #include "time/period.hpp"
+#include "time/calendar.hpp"
 #include "time/time_arithmetic.hpp"
+
 
 using qris::time::Date;
 using qris::time::Period;
 using qris::time::PeriodUnit;
 using qris::time::addPeriod;
 using qris::time::subtractPeriod;
+using qris::time::Calendar;
+
+// TARGET simplifié sans jours fériés
+static Calendar targetCalendar()
+{
+    return Calendar("TARGET", {});
+}
+
+static Calendar calendarWithHoliday()
+{
+    return Calendar(
+        "TARGET",
+        { Date(18, 3, 2025) } // mardi férié
+    );
+}
+
 
 // -----------------------------------------------------------------------------
 // Days (D)
@@ -174,4 +192,62 @@ TEST(TimeArithmeticTest, AddThenSubtractIsIdentity)
     EXPECT_EQ(subtractPeriod(addPeriod(d, p1), p1), d);
     EXPECT_EQ(subtractPeriod(addPeriod(d, p2), p2), d);
     EXPECT_EQ(subtractPeriod(addPeriod(d, p3), p3), d);
+}
+
+TEST(ShiftBusinessDaysTest, ZeroShiftReturnsSameDate)
+{
+    Date d(15, 3, 2025); // samedi
+    Date result = shiftBusinessDays(d, 0, targetCalendar());
+
+    EXPECT_EQ(result, d);
+}
+
+TEST(ShiftBusinessDaysTest, ForwardOneBusinessDay)
+{
+    Date d(14, 3, 2025); // vendredi
+    Date result = shiftBusinessDays(d, 1, targetCalendar());
+
+    EXPECT_EQ(result, Date(17, 3, 2025)); // lundi
+}
+
+TEST(ShiftBusinessDaysTest, BackwardOneBusinessDay)
+{
+    Date d(17, 3, 2025); // lundi
+    Date result = shiftBusinessDays(d, -1, targetCalendar());
+
+    EXPECT_EQ(result, Date(14, 3, 2025)); // vendredi
+}
+
+TEST(ShiftBusinessDaysTest, ForwardAcrossWeekend)
+{
+    Date d(13, 3, 2025); // jeudi
+    Date result = shiftBusinessDays(d, 2, targetCalendar());
+
+    EXPECT_EQ(result, Date(17, 3, 2025)); // lundi
+}
+
+TEST(ShiftBusinessDaysTest, BackwardAcrossWeekend)
+{
+    Date d(17, 3, 2025); // lundi
+    Date result = shiftBusinessDays(d, -2, targetCalendar());
+
+    EXPECT_EQ(result, Date(13, 3, 2025)); // jeudi
+}
+
+TEST(ShiftBusinessDaysTest, SkipsHoliday)
+{
+    Date d(17, 3, 2025); // lundi
+    Date result = shiftBusinessDays(d, 1, calendarWithHoliday());
+
+    EXPECT_EQ(result, Date(19, 3, 2025)); // mercredi
+}
+
+TEST(ShiftBusinessDaysTest, ForwardThenBackwardIsIdentity)
+{
+    Date d(12, 3, 2025); // mercredi
+
+    Date forward = shiftBusinessDays(d, 5, targetCalendar());
+    Date backward = shiftBusinessDays(forward, -5, targetCalendar());
+
+    EXPECT_EQ(backward, d);
 }
